@@ -1,7 +1,7 @@
 name: Docker AppInspect
 
 on:
-  push:
+  pull_requests:
     paths:
       # Build and publish a new image every time the dockerfile is changed
       - "cicd/dockerfiles/appinspect.dockerfile"
