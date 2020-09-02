@@ -4,10 +4,7 @@ on:
   push:
     paths:
       # Build and publish a new image every time the dockerfile is changed
-      - 'cicd/dockerfiles/appinspect.dockerfile'
-
-  # Run tests for any PRs.
-  pull_request:
+      - "cicd/dockerfiles/appinspect.dockerfile"
 
 env:
   IMAGE_NAME: appinspect
