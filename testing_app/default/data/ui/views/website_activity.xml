@@ -1,0 +1,47 @@
+<dashboard>
+  <label>Website Activity</label>
+  <description>This dashboard examines activity on the Buttercup Games website</description>
+  <row>
+    <panel>
+      <single id="purchases_today">
+        <title>Purchases Today</title>
+        <search>
+          <query>index=main source="/output/access.log" action=purchase | stats count</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">250</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Web Access Events</title>
+      <chart id="web_access_events">
+        <title>Access Events</title>
+        <search>
+          <query>index=main source="/output/access.log" | timechart c by action</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table id="purchases_by_host">
+        <title>Purchases by Host</title>
+        <search>
+          <query>index=main source="/output/access.log" action=purchase 
+| stats c by host</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

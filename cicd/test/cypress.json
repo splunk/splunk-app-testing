@@ -1,0 +1,15 @@
+{
+    "baseUrl": "http://localhost:8000",
+    "base_api": "https://localhost:8089",
+    "env": {
+      "cmc_uri": "/en-US/app/testing_app",
+      "splunk_user": "admin",
+      "splunk_password": "newPassword"
+    },
+    "defaultCommandTimeout": 40000,
+    "viewportWidth": 1000,
+    "viewportHeight": 1200,
+    "chromeWebSecurity": false,
+    "screenShotOnFailure": false
+}
+
