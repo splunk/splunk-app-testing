@@ -1,0 +1,22 @@
+{
+  "name": "app-test-pkg",
+  "version": "1.0.0",
+  "description": "Test Suite for Sample App",
+  "scripts": {
+    "debug": "cypress open",
+    "test": "cypress run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@cd.splunkdev.com:cloudworks/monitoring/cmc-app.git"
+  },
+  "author": "Splunk",
+  "license": "ISC",
+  "engines": {
+    "node": "12.5.0",
+    "npm": "6.9.2"
+  },
+  "devDependencies": {
+    "cypress": "^4.5.0"
+  }
+}
