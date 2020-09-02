@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:18.04 
 
 RUN apt-get update -qq && apt-get install -qq -y make bash curl wget tar git python3 python-pip ca-certificates
 RUN pip install --upgrade setuptools
