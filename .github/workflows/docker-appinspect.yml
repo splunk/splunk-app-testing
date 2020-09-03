@@ -6,6 +6,10 @@ on:
     paths:
       - "cicd/dockerfiles/appinspect.dockerfile"
   workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why you are re-building this docker image"
+        required: false
 
 env:
   IMAGE_NAME: appinspect
