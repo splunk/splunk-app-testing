@@ -1,0 +1,51 @@
+name: Test and Build
+
+on:
+  pull_request:
+    branches:
+  push:
+    branches:
+      - master
+
+jobs:
+  login:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login into GitHub Container Registry
+        run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+  appinspect:
+    runs-on: ubuntu-latest
+    container: ghcr.io/ermontross/appinspect:latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run AppInspect
+        run: splunk-appinspect inspect testing_app --output-file appinspect_result.json --mode precert
+
+      - name: Upload AppInspect Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: appinspect
+          path: appinspect_result.json
+
+  generate-data:
+    needs: appinspect
+    runs-on: ubuntu-latest
+    container: ghcr.io/ermontross/eventgen_7_0_0:latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run Eventgen
+        run: |
+          mkdir output
+          cp -r ./cicd/samples /samples
+          splunk_eventgen -v generate ./cicd/eventgen.conf
+
+      - name: Upload Generated Test Data
+        uses: actions/upload-artifact@v2
+        with:
+          name: data
+          path: output/
