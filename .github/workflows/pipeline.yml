@@ -33,7 +33,7 @@ jobs:
   generate-data:
     needs: appinspect
     runs-on: ubuntu-latest
-    container: ghcr.io/ermontross/eventgen7_0_0:latest
+    container: ghcr.io/ermontross/eventgen_7_0_0:latest
 
     steps:
       - uses: actions/checkout@v2
