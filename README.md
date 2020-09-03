@@ -4,7 +4,9 @@ Sample CI/CD pipeline for testing a Splunk app against multiple version of Splun
 
 ## Repository Layout
 
-### .gitlab-ci.yml
+### cicd
+
+**GitLab/.gitlab-ci.yml**
 
 This files runs a CI pipeline for GitLab. In GitLab CI, there are `stages`, defined at the top of the file, that run in their defined order. In each stage, you can have one or more `jobs`, defined in the yaml blocks in the file.
 
@@ -17,7 +19,7 @@ In this sample pipeline, we have 4 stages:
 1. `cypress-tests`, which use the [cicd_runner script](#cicd_runner.sh) to run the Cypress tests against different versions of Splunk in parallel
 1. `build-artifacts`, which package up our sample app into a tar to be usable as a Splunk app
 
-### cicd
+Note: To run this pipeline in GitLab, copy the contents of this repo into GitLab and put this file in the root directory.
 
 **dockerfiles**
 
