@@ -3,7 +3,7 @@
 #set -x
 
 if [ $# -lt 1 ]; then
-      echo "Usage: cicd_runner.sh <splunk_8_0_1|splunk_7_2_9>"
+      echo "Usage: cicd_runner.sh <splunk_8_0_1>"
       exit 1
 fi
 
@@ -12,7 +12,8 @@ APP_ROOT="testing_app"
 APPS_DIR="/opt/splunk/etc/apps"
 USER="admin"
 PASSWORD="newPassword"
-REGISTRY="ghcr.io/ermontross"
+REGISTRY="weberjas"
+CI_PROJECT_DIR=${CI_PROJECT_DIR:-`pwd`}
 
 echo "Running image: ${version}..."
 
@@ -28,10 +29,10 @@ docker container create --rm --name $version --hostname "idx-example.splunkcloud
 
 # Copy app and configuration into Splunk container
 echo "Copying data into container..."
-echo "docker cp $APP_ROOT $version:$APPS_DIR/"
-docker cp $APP_ROOT $version:$APPS_DIR/
-echo "docker cp output $version:/"
-docker cp output $version:/
+echo "docker cp $CI_PROJECT_DIR/$APP_ROOT $version:$APPS_DIR/"
+docker cp $CI_PROJECT_DIR/$APP_ROOT $version:$APPS_DIR/
+echo "docker cp $CI_PROJECT_DIR/output $version:/"
+docker cp $CI_PROJECT_DIR/output $version:/
 
 # Start Splunk container
 echo "starting ${version}..."
@@ -113,10 +114,10 @@ docker container create --name cypress_runner \
   -e CYPRESS_headless=true \
   cypress/included:5.0.0
 
-docker cp cicd/test/cypress cypress_runner:/e2e/cypress
-docker cp cicd/test/cypress.json cypress_runner:/e2e/cypress.json
+docker cp $CI_PROJECT_DIR/cicd/test/cypress cypress_runner:/e2e/cypress
+docker cp $CI_PROJECT_DIR/cicd/test/cypress.json cypress_runner:/e2e/cypress.json
 docker start -a cypress_runner || status=$?
-docker cp cypress_runner:/e2e/cypress/videos cicd/test/cypress/videos
+docker cp cypress_runner:/e2e/cypress/videos $CI_PROJECT_DIR/cicd/test/cypress/videos
 # clean up the network for local runs
 docker stop $version
 docker network rm testingnet
