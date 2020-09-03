@@ -40,13 +40,9 @@ jobs:
     container: ghrc.io/splunk/eventgen7_0_0:latest
 
     steps:
-      - name: Login into GitHub Container Registry
-        run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
-
       - uses: actions/checkout@v2
 
       - name: Run Eventgen
-        container: ghcr.io/splunk/eventgen7_0_0:latest
         run: |
           mkdir output
           cp -r ./cicd/samples /samples
