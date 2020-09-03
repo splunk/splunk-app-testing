@@ -1,4 +1,4 @@
-FROM splunk/splunk:8.0.1
+FROM splunk/splunk:8.0.1 
 USER root
 WORKDIR /opt/splunk
 
