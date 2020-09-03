@@ -1,10 +1,6 @@
 name: Docker Splunk 7.2.9
 
 on:
-  push:
-    paths:
-      # Build and publish a new image every time the dockerfile is changed
-      - "cicd/dockerfiles/splunk_7_2_9.dockerfile"
   pull_request:
     paths:
       - "cicd/dockerfiles/splunk_7_2_9.dockerfile"
@@ -22,7 +18,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build image
-        run: docker build . --file cicd/dockerfiles/splunk_7_2_9.dockerfile --tag $IMAGE_NAME
+        run: docker build ./cicd/dockerfiles --file cicd/dockerfiles/splunk_7_2_9.dockerfile --tag $IMAGE_NAME
 
       - name: Log into GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
