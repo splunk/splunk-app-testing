@@ -1,15 +1,13 @@
 name: Docker AppInspect
 
 on:
+  push:
+    paths:
+      # Build and publish a new image every time the dockerfile is changed
+      - "cicd/dockerfiles/appinspect.dockerfile"
   pull_request:
-    # Build and publish a new image every time the dockerfile is changed
     paths:
       - "cicd/dockerfiles/appinspect.dockerfile"
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: "Why you are re-building this docker image"
-        required: false
 
 env:
   IMAGE_NAME: appinspect
