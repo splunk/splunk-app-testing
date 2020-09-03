@@ -15,9 +15,10 @@ jobs:
       - name: Login into GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - uses: actions/checkout@v2
+
       - name: Run AppInspect
         container: ghcr.io/splunk/appinspect:latest
-        uses: actions/checkout@v2
         run: |
           splunk-appinspect inspect testing_app --output-file appinspect_result.json --mode precert
 
@@ -36,9 +37,10 @@ jobs:
       - name: Login into GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - uses: actions/checkout@v2
+
       - name: Run Eventgen
         container: ghcr.io/splunk/eventgen7_0_0:latest
-        uses: actions/checkout@v2
         run: |
           mkdir output
           cp -r ./cicd/samples /samples
