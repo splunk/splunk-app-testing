@@ -7,9 +7,12 @@ on:
     branches:
       - master
 
+runs-on: ubuntu-latest
+
 jobs:
   appinspect:
-    runs-on: ghcr.io/splunk/appinspect:latest
+    container:
+      image: ghcr.io/splunk/appinspect:latest
 
     steps:
       - uses: actions/checkout@v2
@@ -26,7 +29,8 @@ jobs:
 
   generate-data:
     needs: appinspect
-    runs-on: ghrc.io/splunk/eventgen7_0_0:latest
+    container:
+      image: ghrc.io/splunk/eventgen7_0_0:latest
 
     steps:
       - uses: actions/checkout@v2
