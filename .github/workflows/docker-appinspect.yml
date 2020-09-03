@@ -1,13 +1,11 @@
 name: Docker AppInspect
 
 on:
-  push:
-    paths:
-      # Build and publish a new image every time the dockerfile is changed
-      - "cicd/dockerfiles/appinspect.dockerfile"
   pull_request:
+    # Build and publish a new image every time the dockerfile is changed
     paths:
       - "cicd/dockerfiles/appinspect.dockerfile"
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: appinspect
@@ -30,7 +28,7 @@ jobs:
 
       - name: Push image to GitHub Container Registry
         run: |
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          IMAGE_ID=ghcr.io/${{ github.ermontross }}/$IMAGE_NAME
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           # Strip git ref prefix from version
