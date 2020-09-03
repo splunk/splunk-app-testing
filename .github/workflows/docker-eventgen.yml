@@ -1,16 +1,16 @@
-name: Docker AppInspect
+name: Docker Eventgen
 
 on:
   push:
     paths:
       # Build and publish a new image every time the dockerfile is changed
-      - "cicd/dockerfiles/appinspect.dockerfile"
+      - "cicd/dockerfiles/eventgen_7_0_0.dockerfile"
   pull_request:
     paths:
-      - "cicd/dockerfiles/appinspect.dockerfile"
+      - "cicd/dockerfiles/eventgen_7_0_0.dockerfile"
 
 env:
-  IMAGE_NAME: appinspect
+  IMAGE_NAME: eventgen_7_0_0
 
 jobs:
   # Push image to GitHub Packages.
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build image
-        run: docker build . --file cicd/dockerfiles/appinspect.dockerfile --tag $IMAGE_NAME
+        run: docker build . --file cicd/dockerfiles/eventgen_7_0_0.dockerfile --tag $IMAGE_NAME
 
       - name: Log into GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
