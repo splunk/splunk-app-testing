@@ -13,6 +13,7 @@ jobs:
     steps:
       - name: Login into GitHub Container Registry
         uses: docker/login-action@v1
+        with:
           registry: ghrc.io
           username: ${{ github.actor }}
           password: ${{ secrets.CR_PAT }}
