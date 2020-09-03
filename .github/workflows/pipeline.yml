@@ -10,12 +10,14 @@ on:
 jobs:
   appinspect:
     runs-on: ubuntu-latest
-    container: ghcr.io/splunk/appinspect:latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Login into GitHub Container Registry
+        run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - container: ghcr.io/splunk/appinspect:latest
       - name: Run AppInspect
+        uses: actions/checkout@v2
         run: |
           splunk-appinspect inspect testing_app --output-file appinspect_result.json --mode precert
 
@@ -31,9 +33,12 @@ jobs:
     container: ghrc.io/splunk/eventgen7_0_0:latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Login into GitHub Container Registry
+        run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - container: ghcr.io/splunk/eventgen7_0_0:latest
       - name: Run Eventgen
+        uses: actions/checkout@v2
         run: |
           mkdir output
           cp -r ./cicd/samples /samples
