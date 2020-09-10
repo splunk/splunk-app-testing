@@ -49,3 +49,47 @@ jobs:
         with:
           name: data
           path: output/
+
+  splunk729:
+    needs: generate-data
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download Generated Test Data
+        uses: actions/download-artifact@v2
+        with:
+          name: data
+          path: output/
+
+      - name: Run Splunk and Cypress
+        run: cicd/cicd_runner.sh splunk_7_2_9
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: splunk729-results
+          path: cicd/test/cypress/videos
+
+  splunk801:
+    needs: generate-data
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download Generated Test Data
+        uses: actions/download-artifact@v2
+        with:
+          name: data
+          path: output/
+
+      - name: Run Splunk and Cypress
+        run: cicd/cicd_runner.sh splunk_8_0_1
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: splunk801-results
+          path: cicd/test/cypress/videos
