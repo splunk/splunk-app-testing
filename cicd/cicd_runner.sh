@@ -26,6 +26,8 @@ SPLUNK_ADD="tcp 1514"
 SPLUNK_PASSWORD="newPassword"
 SPLUNK_HOSTNAME="idx-example.splunkcloud.com"
 
+mkdir -p build
+
 echo "Running image: ${version}..."
 
 # The Docker network allows the Splunk and testing containers to communicate
