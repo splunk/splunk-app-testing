@@ -71,7 +71,7 @@ jobs:
         with:
           name: splunk729-results
           path: cicd/test/cypress/videos
-          path: build/
+                build/
 
   splunk801:
     needs: generate-data
@@ -94,4 +94,4 @@ jobs:
         with:
           name: splunk801-results
           path: cicd/test/cypress/videos
-          path: build/
+                build/
