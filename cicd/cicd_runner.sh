@@ -1,18 +1,32 @@
 #!/bin/bash
-
 #set -x
 
-if [ $# -lt 1 ]; then
-      echo "Usage: cicd_runner.sh <splunk_8_0_1|splunk_7_2_9>"
+if [ $# -lt 2 ]; then
+      echo "Usage: cicd_runner.sh [Splunk Image] [Cypress Image]"
+      echo "Image: "
+      echo "    registry/image:tag"
       exit 1
 fi
 
+MAX_WAIT_SECONDS=120
 version=$1
+cypress_image=$2
+container="splunk"
 APP_ROOT="testing_app"
 APPS_DIR="/opt/splunk/etc/apps"
 USER="admin"
 PASSWORD="newPassword"
-REGISTRY="ghcr.io/ermontross"
+CI_PROJECT_DIR=${CI_PROJECT_DIR:-`pwd`}
+
+SPLUNK_HOME="/opt/splunk"
+SPLUNK_ETC="/opt/splunk/etc"
+SPLUNK_START_ARGS="--accept-license"
+SPLUNK_ENABLE_LISTEN="9997"
+SPLUNK_ADD="tcp 1514"
+SPLUNK_PASSWORD="newPassword"
+SPLUNK_HOSTNAME="idx-example.splunkcloud.com"
+
+mkdir -p build
 
 echo "Running image: ${version}..."
 
@@ -21,103 +35,125 @@ echo "Create a bridge network for the containers to communicate"
 docker network create testingnet
 
 # Create the Splunk container from the image but do not start it yet
-echo "Starting splunk image $version:latest..."
-#docker container create --name $version --hostname "idx-example.splunkcloud.com" --network testingnet $REGISTRY/$version:latest
-echo "docker container create --rm --name $version --hostname 'idx-example.splunkcloud.com' --network testingnet $REGISTRY/$version:latest"
-docker container create --rm --name $version --hostname "idx-example.splunkcloud.com" --network testingnet $REGISTRY/$version:latest
+echo "Starting splunk image ${version} as ${container}..."
+docker run -d \
+      --name $container \
+      --network testingnet \
+      --hostname "$SPLUNK_HOSTNAME" \
+      --env SPLUNK_HOME="$SPLUNK_HOME" \
+      --env SPLUNK_ETC="$SPLUNK_ETC" \
+      --env SPLUNK_START_ARGS="$SPLUNK_START_ARGS" \
+      --env SPLUNK_ENABLE_LISTEN="$SPLUNK_ENABLE_LISTEN" \
+      --env SPLUNK_ADD="$SPLUNK_ADD" \
+      --env SPLUNK_PASSWORD="$SPLUNK_PASSWORD" \
+      --user root \
+      -p 8000:8000 \
+      -p 8089:8089 \
+      $version
 
-# Copy app and configuration into Splunk container
 echo "Copying data into container..."
-echo "docker cp $APP_ROOT $version:$APPS_DIR/"
-docker cp $APP_ROOT $version:$APPS_DIR/
-echo "docker cp output $version:/"
-docker cp output $version:/
-
-# Start Splunk container
-echo "starting ${version}..."
-docker start $version
+docker exec $container bash -c "mkdir -p -m 777 /opt/splunk/etc/apps"
+docker cp $CI_PROJECT_DIR/cicd/config/passwd $container:$SPLUNK_ETC/passwd
+docker cp $CI_PROJECT_DIR/$APP_ROOT $container:$APPS_DIR/$APP_ROOT
+docker cp $CI_PROJECT_DIR/output $container:/
+# Prevent splunk from prompting for password reset
+docker exec $container bash -c "touch /opt/splunk/etc/.ui_login"
 
 # Wait for instance to be available
 # Waiting for 2 and a half minutes.
-loopCounter=30
-mainReady=0
-# forwarderReady=0
-echo "Wait for Splunk to be available..."
+loopCounter=0
+health="starting"
 
-while [[ $loopCounter != 0 && $mainReady != 1 ]]; do
-  ((loopCounter--))
-  health=`docker ps --filter "name=${version}" --format "{{.Status}}"`
+# check to see if container has a health check and if so, wait for it to be healthy
+while [[ $loopCounter -lt MAX_WAIT_SECONDS && $health =~ "starting" ]]; do
+  health=`docker ps --filter "name=${container}" --format "{{.Status}}"`
+  echo -ne "\rWaiting for Splunk to be available...$((MAX_WAIT_SECONDS - loopCounter))   "
+  ((loopCounter++))
+  sleep 1
+done
 
-# TODO document the container status
-# health will be one of these values: 
-  if [[ ! $health =~ "starting" ]]; then
-    echo "container running, checking data status..."
-    eventCount=`docker exec $version bash -c "SPLUNK_USERNAME=admin SPLUNK_PASSWORD=newPassword /opt/splunk/bin/splunk search 'index=main source=/output/access.log | stats count' -app testing_app"`
-    # This count reflects the number of events which are read from the
-    # test data file.
-    if [[ $eventCount =~ "1559" ]]; then
-      echo "Data full indexed!"
-      mainReady=1
-    fi
+# validate container is running
+health=`docker ps --filter "name=${container}" --format "{{.Status}}"`
+# if there was a problem, print some debugging information
+if [[ $health == "" ]]; then
+  echo "Health:\n${health}\n" &> Errors.txt
+  echo "--------------------------------" &> Errors.txt
+  docker ps -a &> Errors.txt
+  echo "--------------------------------" &> Errors.txt
+  docker inspect $container &> Errors.txt
+  echo "--------------------------------" &> Errors.txt
+  docker logs $container &> Errors.txt
+  echo "--------------------------------" &> Errors.txt
+  echo "Container is no longer running!"
+  echo "See Errors.txt for more information."
+  exit 1
+else
+  echo -e "\n\033[0;32m\xE2\x9C\x94\033[0m Splunk Available!"
+fi
+
+# if the container is healthy, or it's an old container without a health check, use the saved search to validate data is loaded
+loopCounter=0
+splunkReady=0
+while [[ $loopCounter -lt MAX_WAIT_SECONDS && $splunkReady -lt 1 ]]; do
+
+  echo -ne "container running, checking indexed data count...$((MAX_WAIT_SECONDS - loopCounter))   \r"
+  eventCount=`docker exec $container bash -c "SPLUNK_USERNAME=admin SPLUNK_PASSWORD=newPassword /opt/splunk/bin/splunk search 'index=main source=/output/access.log | stats count' -app testing_app"`
+  if [[ $eventCount =~ "1559" ]]; then
+    echo -e "\n\033[0;32m\xE2\x9C\x94\033[0m Data full indexed!"
+    splunkReady=1
   fi
-
- # if the container is no longer running...
-  if [[ $health == "" ]]; then
-    echo "Health:\n${health}\n"
-    echo "--------------------------------"
-    docker ps -a
-    echo "--------------------------------"
-    docker inspect $version
-    echo "--------------------------------"
-    docker logs $version
-    echo "--------------------------------"
-    echo "Container is no longer running!"
-    exit 1
-  fi
-
-  echo "loopCounter: ${loopCounter}"
-  echo "mainReady: ${mainReady}"
+  ((loopCounter+=5))
   sleep 5
 done
 
-if [[ $mainReady != 1 ]]; then
+if [[ $splunkReady != 1 ]]; then
   echo "Timeout waiting for data to be ingested into Splunk!"
-  docker exec $version bash -c "ls -l /output"
-  docker logs $version
+  echo "See build/Errors.txt for more information."
+  docker exec $container bash -c "ls -l /output" &> build/Errors.txt
+  docker logs $container &> Errors.txt
   exit 1
 fi
 
 echo "Setting up test environment..."
-# Prevent splunk from prompting for password reset
-docker exec $version bash -c "touch /opt/splunk/etc/.ui_login"
-# Run btool on the Splunk container
-# TODO: Will this create a failure state if there is something wrong with btool or will it just report the error and move on?
-docker exec $version bash -c "/opt/splunk/bin/splunk btool check --debug"
 
-echo "-------------------------------------"
+# Run btool on the Splunk container
+echo -n "Running btool checks..."
+docker exec $container bash -c "/opt/splunk/bin/splunk btool check --debug" &> build/btool_output.txt
+
+if [ $? -eq 0 ]
+then
+    echo -e "\033[0;32m\xE2\x9C\x94\033[0m"
+  else
+    echo "Failed!"
+    echo "See build/btool_output.txt for more information"
+fi
 
 # Run saved searches
-echo "Running Saved Searches..."
-
+#echo "Running Saved Searches..."
+#
 # TODO change saved search
-
-echo "-------------------------------------"
-
+#echo "splunk-app-manifest:"
+#docker exec $version bash -c "SPLUNK_USERNAME=$USER SPLUNK_PASSWORD=$PASSWORD /opt/splunk/bin/splunk search '| savedsearch \"SIM SS - Splunk Apps Manifest\" ' -app splunk_instance_monitoring"
+#
 echo "Executing Cypress test specs..."
 
 docker container create --name cypress_runner \
   --network testingnet \
   -w /e2e \
-  -e CYPRESS_baseUrl=http://$version:8000 \
-  -e CYPRESS_base_api=https://$version:8089 \
+  -e CYPRESS_baseUrl=http://$container:8000 \
+  -e CYPRESS_base_api=https://$container:8089 \
   -e CYPRESS_headless=true \
-  cypress/included:5.0.0
+  $cypress_image
 
 docker cp cicd/test/cypress cypress_runner:/e2e/cypress
 docker cp cicd/test/cypress.json cypress_runner:/e2e/cypress.json
 docker start -a cypress_runner || status=$?
-docker cp cypress_runner:/e2e/cypress/videos cicd/test/cypress/videos
-# clean up the network for local runs
-docker stop $version
-docker network rm testingnet
+docker cp cypress_runner:/e2e/cypress/videos $CI_PROJECT_DIR/cicd/test/cypress/videos
+
+# clean up from the run
+docker stop $container || true
+docker container rm $container || true
+docker container rm cypress_runner || true
+docker network rm testingnet || true
 exit ${status:-0}
+
