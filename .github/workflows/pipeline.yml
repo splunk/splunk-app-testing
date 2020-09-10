@@ -64,7 +64,7 @@ jobs:
           path: output/
 
       - name: Run Splunk and Cypress
-        run: cicd/cicd_runner.sh splunk_7_2_9
+        run: cicd/cicd_runner.sh splunk/splunk:7.2.9 cypress/included:5.0.0
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v2
@@ -86,7 +86,7 @@ jobs:
           path: output/
 
       - name: Run Splunk and Cypress
-        run: cicd/cicd_runner.sh splunk_8_0_1
+        run: cicd/cicd_runner.sh splunk/splunk:8.0.1 cypress/included:5.0.0
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v2
