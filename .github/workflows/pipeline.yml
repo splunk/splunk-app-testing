@@ -70,8 +70,9 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: splunk729-results
-          path: cicd/test/cypress/videos
-                build/
+          path: |
+            cicd/test/cypress/videos
+            build/
 
   splunk801:
     needs: generate-data
@@ -93,5 +94,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: splunk801-results
-          path: cicd/test/cypress/videos
-                build/
+          path: |
+            cicd/test/cypress/videos
+            build/
