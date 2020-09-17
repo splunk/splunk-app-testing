@@ -1,0 +1,25 @@
+sequenceDiagram
+	participant Pipeline
+	participant AppInspect
+	participant Eventgen
+	participant Splunk
+	participant Cypress
+	Pipeline->>+AppInspect: Run
+	AppInspect->>-Pipeline: Results
+	Pipeline->>+Eventgen: AppInspect passes
+	Eventgen->>-Pipeline: Redated logs
+	Loop All Splunk Versions
+		activate Splunk
+		Pipeline->>+Splunk: create container, copy data, start container
+		Pipeline->>Splunk: Probe for readiness
+		Splunk->>Pipeline: Ready
+		Pipeline->>+Cypress: Start testing
+		Loop All Tests
+			Cypress->>Splunk: Run test
+			Splunk->>Cypress: Results
+		End
+		Cypress->>-Pipeline: test results
+		Pipeline->>Splunk: Shutdown
+		deactivate Splunk
+	End
+	Pipeline->>+Pipeline: Create App archive
