@@ -67,4 +67,4 @@ This is essentially the same file as [cicd_runner.sh](#cicd_runner.sh), but work
 ## Process Flow
 The sequence diagram can help to explain the flow of the pipeline. It is constructed using mermaid and the source files for this diagram are present in the docs/ directory.
 
-![Pipeline Sequence Diagram](/docks/images/flow-seq.png)
+![Pipeline Sequence Diagram](/docs/images/flow-seq.png)
