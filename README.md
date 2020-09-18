@@ -1,8 +1,27 @@
 # Splunk App Testing
 
-Sample CI/CD pipeline for testing a Splunk app against multiple version of Splunk in parallel.
+Sample CI/CD pipeline for testing a Splunk app against multiple versions of Splunk in parallel.
+
+## How to Use This Repo
+
+This repo goes along with a .conf20 presentation on Fast, Off-the-Shelf Testing for Splunk Apps. There is a small sample Splunk app, along with a running CI/CD testing and building pipeline using GitHub Actions.
+
+- View the pipeline by going to the [Actions page](https://github.com/splunk/splunk-app-testing/actions)
+- Clone/Fork the repo or pull the [pipeline configuration](https://github.com/splunk/splunk-app-testing/blob/main/.github/workflows/pipeline.yml) and run it with your own Splunk app code!
+- Use our [Dockerfiles](https://github.com/splunk/splunk-app-testing/tree/main/cicd/dockerfiles) to setup your own pipeline
+- See the [Repository Layout](#Repository-Layout) section for further explanation of the directories and files in the repo
+- We have also included a [.gitlab-ci.yml](https://github.com/splunk/splunk-app-testing/blob/main/cicd/GitLab/.gitlab-ci.yml) with a corresponding script in the same directory for running the same pipeline using GitLab
 
 ## Repository Layout
+
+### .github/workflows
+
+This directory holds all the GitHub Action pipeline configurations. The main one is `pipeline.yml`, which has the following stages:
+
+1. **login:** login to the GitHub Container Registry to be able to access Docker images stored in the registry
+1. **appinspect:** Run AppInspect on the checked out repository app code and upload the results for viewing after the pipeline has completed
+1. **generate-data:** Use Eventgen to generate test data from sample log files and upload the generated data for use in future pipeline steps
+1. **splunk:** Use the [cicd_runner.sh](#cicd_runner.sh) script to bring up a Splunk container (version specified by the pipeline job) and Cypress container to run the integration tests against the Splunk app.
 
 ### cicd
 
@@ -65,6 +84,11 @@ Note: To run this pipeline in GitLab, copy the contents of this repo into GitLab
 This is essentially the same file as [cicd_runner.sh](#cicd_runner.sh), but works with GitLab CI's variables and ecosystem.
 
 ## Process Flow
+
 The sequence diagram can help to explain the flow of the pipeline. It is constructed using mermaid and the source files for this diagram are present in the docs/ directory.
 
 ![Pipeline Sequence Diagram](/docs/images/flow-seq.png)
+
+## Contact Us
+
+We would love to hear from you on how you are testing your own Splunk apps or questions on how to improve your pipeline. Let us know at **CHANGE**
