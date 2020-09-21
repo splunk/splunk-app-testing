@@ -91,4 +91,4 @@ The sequence diagram can help to explain the flow of the pipeline. It is constru
 
 ## Contact Us
 
-We would love to hear from you on how you are testing your own Splunk apps or questions on how to improve your pipeline. Let us know at **CHANGE**
+We would love to hear from you on how you are testing your own Splunk apps or questions on how to improve your pipeline or issues you see in this repo. Let us know by opening a GitHub issue!
