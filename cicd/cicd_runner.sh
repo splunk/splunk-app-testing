@@ -34,7 +34,7 @@ echo "Running image: ${version}..."
 echo "Create a bridge network for the containers to communicate"
 docker network create testingnet
 
-# Create the Splunk container from the image but do not start it yet
+# Create and start the Splunk container
 echo "Starting splunk image ${version} as ${container}..."
 docker run -d \
       --name $container \
@@ -54,7 +54,9 @@ docker run -d \
 echo "Copying data into container..."
 docker exec $container bash -c "mkdir -p -m 777 /opt/splunk/etc/apps"
 docker cp $CI_PROJECT_DIR/cicd/config/passwd $container:$SPLUNK_ETC/passwd
+# Copy in the sample app
 docker cp $CI_PROJECT_DIR/$APP_ROOT $container:$APPS_DIR/$APP_ROOT
+# Copy in the generated data
 docker cp $CI_PROJECT_DIR/output $container:/
 # Prevent splunk from prompting for password reset
 docker exec $container bash -c "touch /opt/splunk/etc/.ui_login"
@@ -74,6 +76,7 @@ done
 
 # validate container is running
 health=`docker ps --filter "name=${container}" --format "{{.Status}}"`
+
 # if there was a problem, print some debugging information
 if [[ $health == "" ]]; then
   echo "Health:\n${health}\n" &> Errors.txt
@@ -106,6 +109,7 @@ while [[ $loopCounter -lt MAX_WAIT_SECONDS && $splunkReady -lt 1 ]]; do
   sleep 5
 done
 
+# timeout error message if the data was not fully indexed
 if [[ $splunkReady != 1 ]]; then
   echo "Timeout waiting for data to be ingested into Splunk!"
   echo "See build/Errors.txt for more information."
@@ -128,15 +132,9 @@ then
     echo "See build/btool_output.txt for more information"
 fi
 
-# Run saved searches
-#echo "Running Saved Searches..."
-#
-# TODO change saved search
-#echo "splunk-app-manifest:"
-#docker exec $version bash -c "SPLUNK_USERNAME=$USER SPLUNK_PASSWORD=$PASSWORD /opt/splunk/bin/splunk search '| savedsearch \"SIM SS - Splunk Apps Manifest\" ' -app splunk_instance_monitoring"
-#
 echo "Executing Cypress test specs..."
 
+# Create Cypress container but do not start it yet
 docker container create --name cypress_runner \
   --network testingnet \
   -w /e2e \
@@ -145,9 +143,14 @@ docker container create --name cypress_runner \
   -e CYPRESS_headless=true \
   $cypress_image
 
+# Copy in configuration and tests
 docker cp cicd/test/cypress cypress_runner:/e2e/cypress
 docker cp cicd/test/cypress.json cypress_runner:/e2e/cypress.json
+
+# Start Cypress container, which runs the tests
 docker start -a cypress_runner || status=$?
+
+# Copy out the test results (Cypress videos)
 docker cp cypress_runner:/e2e/cypress/videos $CI_PROJECT_DIR/cicd/test/cypress/videos
 
 # clean up from the run
@@ -156,4 +159,3 @@ docker container rm $container || true
 docker container rm cypress_runner || true
 docker network rm testingnet || true
 exit ${status:-0}
-
