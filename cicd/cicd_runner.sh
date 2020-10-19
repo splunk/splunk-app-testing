@@ -67,7 +67,7 @@ loopCounter=0
 health="starting"
 
 # check to see if container has a health check and if so, wait for it to be healthy
-while [[ $loopCounter -lt MAX_WAIT_SECONDS && $health =~ "starting" ]]; do
+while [[ $loopCounter -lt $MAX_WAIT_SECONDS && $health =~ "starting" ]]; do
   health=`docker ps --filter "name=${container}" --format "{{.Status}}"`
   echo -ne "\rWaiting for Splunk to be available...$((MAX_WAIT_SECONDS - loopCounter))   "
   ((loopCounter++))
@@ -97,7 +97,7 @@ fi
 # if the container is healthy, or it's an old container without a health check, use the saved search to validate data is loaded
 loopCounter=0
 splunkReady=0
-while [[ $loopCounter -lt MAX_WAIT_SECONDS && $splunkReady -lt 1 ]]; do
+while [[ $loopCounter -lt $MAX_WAIT_SECONDS && $splunkReady -lt 1 ]]; do
 
   echo -ne "container running, checking indexed data count...$((MAX_WAIT_SECONDS - loopCounter))   \r"
   eventCount=`docker exec $container bash -c "SPLUNK_USERNAME=admin SPLUNK_PASSWORD=newPassword /opt/splunk/bin/splunk search 'index=main source=/output/access.log | stats count' -app testing_app"`
